@@ -1,0 +1,25 @@
+{
+	"name": "obsidian-arbre-savoir",
+	"version": "1.0.0",
+	"description": "Draw the knowledge tree as a mind map that grows upward, built from the Antinet numbering in file names.",
+	"main": "main.js",
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"test": "node esbuild.config.mjs epreuves && node --test test/",
+		"version": "node version-bump.mjs && git add manifest.json versions.json"
+	},
+	"keywords": [],
+	"author": "DevidCode",
+	"license": "MIT",
+	"dependencies": {
+		"mind-elixir": "5.15.1"
+	},
+	"devDependencies": {
+		"@types/node": "^16.11.6",
+		"esbuild": "0.17.3",
+		"obsidian": "latest",
+		"tslib": "2.4.0",
+		"typescript": "4.7.4"
+	}
+}

@@ -1,0 +1,52 @@
+/* ── L'ARBRE POUSSE VERS LE HAUT ────────────────────────────────────────────
+   Mind Elixir ne connaît que quatre sens — gauche, droite, des deux côtés,
+   vers le bas. Un arbre a son tronc en bas : on prend « vers le bas » et on
+   retourne le dessin.
+
+   ⛔ LE MIROIR SE POSE SUR LE CONTENU, PAS SUR LE CADRE. Posé sur le cadre, il
+   inverse aussi le déplacement : on tire la souris vers le bas et la carte
+   monte (mesuré : 120 px de glissement, −120 px de déplacement). Le
+   déplacement est un `translate3d` posé sur `.map-canvas`, qui n'a qu'un seul
+   enfant : en retournant CET enfant, le déplacement reste au-dessus du miroir
+   et garde son sens.
+
+   Les nœuds se remettent à l'endroit, sinon le texte est la tête en bas. Les
+   barres d'outils sont hors du miroir, elles ne bougent pas. */
+.arbre-savoir .arbre-savoir-toile me-nodes { transform: scaleY(-1); }
+.arbre-savoir .arbre-savoir-toile me-tpc,
+.arbre-savoir .arbre-savoir-toile me-epd { transform: scaleY(-1); }
+
+/* ⚠️ LE SENS VERTICAL ÉTALE L'ARBRE EN LARGEUR, et les titres de l'Arbre sont
+   des phrases. Mesuré : 6854 px à trois étages dépliés dans un cadre de 1376.
+   Repliés sur deux ou trois lignes, 4360. Ça reste large — on se déplace
+   latéralement, c'est le prix assumé de la forme d'arbre. */
+.arbre-savoir .arbre-savoir-toile me-tpc { max-width: 11rem; white-space: normal; }
+
+.arbre-savoir { display: flex; flex-direction: column; height: 100%; padding: 0; }
+
+.arbre-savoir-legende {
+	display: flex; flex-wrap: wrap; gap: 0.25rem 1rem;
+	padding: 0.6rem 0.9rem;
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+}
+.arbre-savoir-compte { color: var(--text-normal); font-weight: 600; }
+
+/* ⚠️ Une hauteur qui ne dépend pas du contenu : Mind Elixir mesure son
+   conteneur au montage et, dans une boîte qui s'ajuste à son contenu, il
+   mesure zéro. La carte ne s'afficherait pas, sans erreur. */
+.arbre-savoir-cadre { position: relative; flex: 1 1 auto; min-height: 20rem; overflow: hidden; }
+.arbre-savoir-toile { width: 100%; height: 100%; }
+
+.arbre-savoir-panneau {
+	position: absolute; right: 1rem; bottom: 1rem; z-index: 10;
+	max-width: 22rem;
+	padding: 0.8rem 0.9rem;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	box-shadow: var(--shadow-s);
+}
+.arbre-savoir-numero { margin: 0; font-family: var(--font-monospace); font-size: var(--font-ui-smaller); color: var(--text-faint); }
+.arbre-savoir-titre { margin: 0.15rem 0 0.6rem; font-weight: 600; color: var(--text-normal); }
+.arbre-savoir-panneau button { width: 100%; cursor: pointer; }
