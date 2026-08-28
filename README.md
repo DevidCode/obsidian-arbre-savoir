@@ -19,7 +19,11 @@ n'écrit jamais dans le vault.
 Icône dans le ruban, ou commande **« Ouvrir l'Arbre du savoir »**.
 
 - Tout arrive **replié** sauf les domaines de tête.
-- Un **clic** sur un nœud déplie ou replie sa branche, et la recentre.
+- Un **appui** sur un nœud déplie ou replie sa branche, et cadre ce qui vient de
+  s'ouvrir. Au doigt comme à la souris : c'est le même chemin.
+- **Sur un volet de moins de 640 px** — un téléphone, ou un panneau serré sur un
+  grand écran — la carte passe au sens **latéral** : les frères s'empilent et on
+  défile. L'arbre vertical n'y tient pas, et aucun réglage n'y changerait rien.
 - Le nœud choisi ouvre un panneau avec son numéro, son titre et un bouton qui
   ouvre la note **dans un volet à côté** — la carte reste sous les yeux.
 - Les exercices, exemples et formulaires ne prennent pas de nœud : ils laissent
@@ -64,6 +68,15 @@ Deux choses valent d'être sues avant de toucher au code :
 En service. Vérifié dans un vrai Obsidian, piloté : 429 notes lues, tronc
 centré, branches au-dessus, glissement dans le bon sens, dépliages, panneau, et
 la note qui s'ouvre dans un volet à côté sans fermer la carte.
+
+⚠️ **Deux pièges de la bibliothèque de cartes**, tous deux invisibles aux tests
+logiques et trouvés en pilotant un vrai Obsidian en tactile :
+
+- sa **sélection ne marche pas au doigt** — son gestionnaire abandonne dès que
+  son détecteur croit que le pointeur a bougé, ce qui arrive à chaque appui. On
+  détecte donc l'appui soi-même, avec une tolérance de 12 px ;
+- `expandNode(el, valeur)` **avec** second argument change la donnée **sans
+  redessiner** : le nœud passe « déplié » et rien n'apparaît.
 
 ⚠️ **Le prix du sens vertical** : il étale l'arbre en largeur, et des titres en
 phrases pèsent lourd. Mesuré à trois étages dépliés : 6854 px dans un cadre de

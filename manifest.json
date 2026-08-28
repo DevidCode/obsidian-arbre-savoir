@@ -1,7 +1,7 @@
 {
 	"id": "arbre-savoir",
 	"name": "Arbre du savoir",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "1.4.0",
 	"description": "Draw the knowledge tree as a mind map that grows upward, built from the Antinet numbering in file names. Read-only.",
 	"author": "DevidCode",

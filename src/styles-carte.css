@@ -22,6 +22,17 @@
    latéralement, c'est le prix assumé de la forme d'arbre. */
 .arbre-savoir .arbre-savoir-toile me-tpc { max-width: 11rem; white-space: normal; }
 
+/* ── LE VOLET ÉTROIT ────────────────────────────────────────────────────────
+   Sur un volet de moins de 640 px — un téléphone, ou un panneau serré sur un
+   grand écran — la carte passe au sens latéral : les frères s'empilent et la
+   largeur ne dépend plus que de la profondeur. Pas de miroir dans ce sens : un
+   arbre couché n'a pas de haut. Et des nœuds plus larges, puisque c'est la
+   hauteur qui absorbe les frères. */
+.arbre-savoir-lateral .arbre-savoir-toile me-nodes,
+.arbre-savoir-lateral .arbre-savoir-toile me-tpc,
+.arbre-savoir-lateral .arbre-savoir-toile me-epd { transform: none; }
+.arbre-savoir-lateral .arbre-savoir-toile me-tpc { max-width: 13rem; font-size: 14px; }
+
 .arbre-savoir { display: flex; flex-direction: column; height: 100%; padding: 0; }
 
 .arbre-savoir-legende {

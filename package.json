@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-arbre-savoir",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Draw the knowledge tree as a mind map that grows upward, built from the Antinet numbering in file names.",
 	"main": "main.js",
 	"scripts": {

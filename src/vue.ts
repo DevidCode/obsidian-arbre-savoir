@@ -18,7 +18,6 @@ export class VueArbre extends ItemView {
 	private me: any = null
 	private vivant = false
 	private panneau: HTMLElement | null = null
-	private surRedimensionnement: (() => void) | null = null
 
 	constructor(leaf: WorkspaceLeaf, dossier: string) {
 		super(leaf)
@@ -75,14 +74,25 @@ export class VueArbre extends ItemView {
 		const cadre = racine.createDiv({ cls: 'arbre-savoir-cadre' })
 		const toile = cadre.createDiv({ cls: 'arbre-savoir-toile' })
 
-		// ⚠️ Mind Elixir mesure son conteneur AU MONTAGE : dans une boîte qui se
-		// dimensionne sur son contenu il mesure zéro, et la carte ne s'affiche
-		// pas — sans erreur. La hauteur vient donc du CSS, pas du contenu.
+		// ⛔ SUR UN VOLET ÉTROIT, L'ARBRE VERTICAL NE TIENT PAS, et aucun réglage
+		// n'y changera rien : onze frères côte à côte ne rentreront jamais dans
+		// 380 px. Mesuré sur un écran de 412 px — même resserré au maximum, la
+		// carte tombait à l'échelle 0,36, soit un texte de 5 px de haut.
+		//
+		// En dessous de 640 px, on passe donc au sens LATÉRAL : les frères
+		// s'empilent, la largeur ne dépend plus que de la profondeur, l'échelle
+		// tient à 0,78 et le texte se lit. On défile du doigt, ce qui est le
+		// geste naturel là-bas. La forme d'arbre est un luxe d'écran large.
+		//
+		// ⚠️ On mesure LE VOLET, pas la fenêtre : dans Obsidian la carte vit dans
+		// un panneau, et un panneau étroit sur un grand écran a exactement le
+		// même problème qu'un téléphone.
+		const etroit = cadre.getBoundingClientRect().width < 640
+		if (etroit) racine.addClass('arbre-savoir-lateral')
+
 		const me = new MindElixir({
 			el: toile,
-			// Le seul sens vertical que connaît la bibliothèque. Un arbre pousse
-			// vers le haut : le miroir est posé en CSS, voir styles.css.
-			direction: MindElixir.DOWN,
+			direction: etroit ? MindElixir.RIGHT : MindElixir.DOWN,
 			editable: false,
 			draggable: false,
 			contextMenu: false,
@@ -100,34 +110,101 @@ export class VueArbre extends ItemView {
 		// nœud, c'est-à-dire à l'exact opposé de l'endroit où il se voit. On
 		// mesure donc à l'écran — `getBoundingClientRect` tient compte des
 		// transformations, elle rend la position VUE.
-		const centrer = (el: HTMLElement | null) => {
-			if (!el || !this.vivant) return
-			const n = el.getBoundingClientRect()
+		//
+		// ⛔ ET ON CADRE UNE ZONE, JAMAIS UN NŒUD. Centrer sur le nœud touché
+		// paraissait juste et ne l'était pas : ses enfants naissent à côté de
+		// lui, donc la moitié tombait hors du cadre. Sur un téléphone, un seul
+		// des cinq nœuds de départ restait atteignable — mesuré.
+		const PLANCHER = 0.35   // en dessous, le texte ne se lit plus
+
+		const boites = (zone?: Element | null) =>
+			Array.from((zone || cadre).querySelectorAll('me-tpc')).map((n) => n.getBoundingClientRect())
+
+		const cadrer = (zone?: Element | null) => {
+			if (!this.vivant) return
+			const bs = boites(zone)
+			if (!bs.length) return
+			const gauche = Math.min(...bs.map((b) => b.left)), droite = Math.max(...bs.map((b) => b.right))
+			const haut = Math.min(...bs.map((b) => b.top)), bas = Math.max(...bs.map((b) => b.bottom))
 			const c = cadre.getBoundingClientRect()
-			me.move(c.left + c.width / 2 - (n.left + n.width / 2), c.top + c.height / 2 - (n.top + n.height / 2))
+			// On ne grossit jamais au-delà de 1 : une branche minuscule ne doit
+			// pas remplir l'écran, sinon l'échelle saute à chaque appui.
+			const facteur = Math.min(1, (c.width * 0.94) / (droite - gauche), (c.height * 0.94) / (bas - haut))
+			const voulu = Math.max(PLANCHER, me.scaleVal * facteur)
+			if (Math.abs(voulu - me.scaleVal) > 0.01) me.scale(voulu)
+
+			// ⚠️ Le recentrage attend le redessin : mesuré avant, il viserait des
+			// positions que le zoom va déplacer.
+			requestAnimationFrame(() => {
+				if (!this.vivant) return
+				const b2 = boites(zone)
+				if (!b2.length) return
+				const g = Math.min(...b2.map((b) => b.left)), d = Math.max(...b2.map((b) => b.right))
+				const h = Math.min(...b2.map((b) => b.top)), ba = Math.max(...b2.map((b) => b.bottom))
+				const c2 = cadre.getBoundingClientRect()
+				me.move(c2.left + c2.width / 2 - (g + d) / 2, c2.top + c2.height / 2 - (h + ba) / 2)
+			})
 		}
 
-		me.bus.addListener('selectNodes', (objets: any[]) => {
-			const o = objets && objets[0]
-			if (!o) return
-			this.montrerPanneau(cadre, parId.get(o.id) || null)
-			// Le clic déplie, le bouton emmène lire. Deux gestes séparés :
-			// explorer la carte ne doit jamais faire quitter la carte.
-			if (o.children && o.children.length) {
-				const el = me.findEle(o.id)
-				if (el) me.expandNode(el, !o.expanded)
-				// ⚠️ Déplier SANS recentrer ne sert à rien : les enfants
-				// naissent à côté du parent, donc hors du cadre dès le
-				// troisième étage, et le clic semble n'avoir rien fait. Le
-				// recentrage attend le redessin.
-				requestAnimationFrame(() => centrer(me.findEle(o.id)))
-			}
-		})
-		me.bus.addListener('unselectNodes', () => this.montrerPanneau(cadre, null))
+		// ⛔ NE PAS SE FIER À LA SÉLECTION DE LA BIBLIOTHÈQUE : ELLE NE MARCHE PAS
+		// AU DOIGT. Son gestionnaire abandonne dès que son détecteur croit que le
+		// pointeur a bougé — ce qui arrive à CHAQUE appui tactile, un doigt
+		// n'étant pas un point. Mesuré sur un profil de téléphone : l'appui ne
+		// faisait strictement rien, ni dépliage ni panneau, et sans erreur.
+		//
+		// On détecte donc l'appui nous-mêmes, avec une tolérance de déplacement.
+		// Les événements de pointeur couvrent le doigt ET la souris : un seul
+		// chemin, donc un seul comportement à vérifier.
+		const TOLERANCE = 12          // px : en dessous, c'est un appui, pas un glissement
+		const actifs = new Set<number>()
+		let depart: { id: number; x: number; y: number; cible: EventTarget | null } | null = null
 
-		centrer(me.findEle(RACINE))
-		this.surRedimensionnement = () => centrer(me.findEle(RACINE))
-		this.registerDomEvent(window, 'resize', this.surRedimensionnement)
+		this.registerDomEvent(toile, 'pointerdown', (e: PointerEvent) => {
+			actifs.add(e.pointerId)
+			// ⛔ Deux doigts, c'est un zoom — jamais un appui.
+			depart = actifs.size === 1 ? { id: e.pointerId, x: e.clientX, y: e.clientY, cible: e.target } : null
+		})
+
+		this.registerDomEvent(toile, 'pointercancel', (e: PointerEvent) => {
+			actifs.delete(e.pointerId)
+			depart = null
+		})
+
+		this.registerDomEvent(toile, 'pointerup', (e: PointerEvent) => {
+			actifs.delete(e.pointerId)
+			const d = depart
+			depart = null
+			if (!d || d.id !== e.pointerId) return
+			if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > TOLERANCE) return   // c'était un déplacement
+			const cible = d.cible instanceof Element ? d.cible : null
+			// Le petit rond de dépliage fait 18 px de côté : la bibliothèque s'en
+			// occupe, et on ne fait surtout pas dépendre l'action de cette cible.
+			if (cible && cible.closest('me-epd')) return
+			const tpc = cible ? (cible.closest('me-tpc') as HTMLElement | null) : null
+
+			if (!tpc) { this.montrerPanneau(cadre, null); return }
+			const cle = (tpc.dataset.nodeid || '').replace(/^me/, '')
+			this.montrerPanneau(cadre, parId.get(cle) || null)
+			me.selectNode(tpc as any)
+
+			// Une branche se déplie quand elle a un rond — l'élément que la
+			// bibliothèque pose elle-même sur les nœuds qui ont des enfants. Le
+			// lire dans le document évite de tenir un second compte qui pourrait
+			// mentir.
+			if (!tpc.parentElement?.querySelector('me-epd')) return
+
+			// ⛔ SANS SECOND ARGUMENT. Avec une valeur explicite, la donnée change
+			// mais la carte n'est pas redessinée : le nœud passe « déplié » sans
+			// que rien n'apparaisse à l'écran.
+			me.expandNode(tpc as any)
+			requestAnimationFrame(() => cadrer(me.findEle(cle)?.closest('me-wrapper')))
+		})
+
+		// À l'ouverture, c'est l'arbre entier qu'il faut faire tenir : il n'y a
+		// que le tronc et les domaines de tête, et ils doivent TOUS être
+		// atteignables.
+		cadrer()
+		this.registerDomEvent(window, 'resize', () => cadrer())
 	}
 
 	private montrerPanneau(cadre: HTMLElement, noeud: Noeud | null) {
