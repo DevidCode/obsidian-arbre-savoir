@@ -8,7 +8,8 @@ export const TYPE_VUE = 'arbre-savoir-carte'
 
 // L'Arbre du savoir, dessiné dans Obsidian.
 //
-// ⛔ LECTURE SEULE, ET C'EST STRUCTUREL. Mind Elixir est un ÉDITEUR : par
+// ⛔ CE PLUGIN EST EN LECTURE SEULE, PAR CHOIX — pas parce qu'une règle
+// l'imposerait à tout le monde. Mind Elixir est un ÉDITEUR : par
 // défaut on renomme un nœud d'un double-clic, on déplace une branche au
 // glisser. Tout est bridé. La vérité, ce sont les fichiers — un rangement
 // accepté à l'écran et perdu au rechargement serait pire qu'une carte figée :

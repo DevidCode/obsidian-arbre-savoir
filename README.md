@@ -2,7 +2,11 @@
 
 Dessine l'Arbre du savoir comme une carte qui **pousse vers le haut**, tronc en
 bas — déduite de la numérotation Antinet portée par les noms de fichiers.
-Lecture seule.
+
+**Lecture seule, par choix de conception** — pas parce que le vault
+l'interdirait. Plusieurs outils y écrivent (Obsidian, le serveur MCP,
+`vault-outils`, `vault-obsidian-web`), et depuis le 2026-08-28 l'Arbre lui-même
+s'écrira depuis l'outil de cartes. Ce plugin-ci ne fait que refléter.
 
 ## À quoi ça sert
 
